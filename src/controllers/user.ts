@@ -1,9 +1,13 @@
 import userService from "../services/user.ts"
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 const createUser = async (req, res) => {
     try {
         const data = req.body;
-        console.log(data);
+        data.password = await bcrypt.hash(data.password, 10);
         const created_user = await userService.createUser(data);
         if (!created_user) {
             return res.json(400, {message: "Failed to create user"});
@@ -16,13 +20,39 @@ const createUser = async (req, res) => {
     }
 }
 
+const logIn = async (req, res) => {
+    try {
+        const data = req.body;
+        let user = await userService.getUsers({email: data.email});
+        if (!user || user.length == 0) {
+            return res.status(400).json({ message: "Failed to find user" });
+        }
+        
+        const passwordMatch = await bcrypt.compare(data.password, user[0].password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Authentication failed' });
+        }
+        if (!process.env.SECRET_KEY) {
+            throw new Error("SECRET_KEY is missing in environment variables");
+        }
+        const token = jwt.sign({user_id: user[0].id}, process.env.SECRET_KEY);
+        res.status(200).json({ token });
+    } catch (error) {
+        console.error("[ERROR] logIn controller: ", error);
+        res.status(500).json({ message: "Login Failed" });
+    }
+}
+
 const updateUser = async (req, res) => {
     try {
     const { id } = req.params;
     const data = req.body;
+    if (req.user.user_id != req.params.id) {
+        return res.status(403).json({ error: "Forbidden" });
+    }
     const updated_user = await userService.updateUser(id, data);
     if (!updated_user) {
-        return res.json(400, {message: "Failed to updated user"});
+        return res.status(400).json({message: "Failed to updated user"});
     }
     const {password, ...user_without_password} = updated_user;
     res.json(user_without_password);
@@ -39,7 +69,7 @@ const getUsers = async (req, res) => {
         console.log(query);
         const found_users = await userService.getUsers(query);
         if (!found_users) {
-            return res.json(400, {message: "Failed to find users"});
+            return res.status(400).json({message: "Failed to find users"});
         }
         const found_users_without_passwords = found_users.map((user) => {
             const { password, ...userWithoutPassword} = user;
@@ -52,10 +82,11 @@ const getUsers = async (req, res) => {
     }
 }
 
-const userControllers = {
+const userController = {
     getUsers,
     createUser,
     updateUser,
+    logIn,
 }
 
-export default userControllers;
+export default userController;

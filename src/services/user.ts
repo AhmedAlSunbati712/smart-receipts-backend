@@ -1,5 +1,6 @@
 import prisma from "../db/prisma_client.ts";
 import type { User } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 const createUser = async (data: Omit<User, "id" | "createdAt"> ) => {
     try {
@@ -34,7 +35,6 @@ const getUsers = async (query: Partial<User>) => {
         console.log(`[ERROR] getUsers: ${error}`);
     }
 }
-
 
 
 const userService = {
