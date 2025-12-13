@@ -1,6 +1,5 @@
 import prisma from "../db/prisma_client.ts";
 import type { User } from "@prisma/client";
-import jwt from "jsonwebtoken";
 
 const createUser = async (data: Omit<User, "id" | "createdAt"> ) => {
     try {
