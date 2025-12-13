@@ -19,10 +19,17 @@ type UpdateReceiptInput = {
     connectItemIds?: string[];
 };
 
-const createReceipt = async (data: CreateReceiptInput ) => {
+const createReceipt = async (userId: string, data: Omit<CreateReceiptInput, "user"> ) => {
     try {
-        const created_receipt = await prisma.receipt.create({
-            data,
+        const created_receipt = await prisma.
+        receipt.create({
+            data: {
+                ...data,
+                user: {
+                    connect: {id: userId},
+                }
+            },
+            include: {items: true}
         });
         return created_receipt;
 
@@ -32,23 +39,24 @@ const createReceipt = async (data: CreateReceiptInput ) => {
     }
 }
 
-const updateReceipt = async (id: string, data: UpdateReceiptInput) => {
+const updateReceipt = async (id: string, userId: string, data: UpdateReceiptInput) => {
     try {
+        const {
+            createItems,
+            connectItemIds,
+            ...receiptFields
+          } = data;
+        
         const updated_receipt = await prisma.receipt.update({
-            where: {id},
+            where: {id, userId},
             data: {
-                vendor: data.vendor,
-                category: data.category,
-                total: data.total,
-                date: data.date,
-                rawText: data.rawText,
-                imageUrl: data.imageUrl,
-                ...(data.createItems || data.connectItemIds
+                ...receiptFields,
+                ...(createItems || connectItemIds
                     ? {
                         items: {
-                          ...(data.createItems && { create: data.createItems }),
-                          ...(data.connectItemIds && {
-                            connect: data.connectItemIds.map(id => ({ id })),
+                          ...(createItems && { create: createItems }),
+                          ...(connectItemIds && {
+                            connect: connectItemIds.map(id => ({ id })),
                           }),
                         },
                       }
@@ -76,10 +84,10 @@ const getReceipts = async (query: Partial<Receipt>) => {
     }
 }
 
-const deleteReceipt = async (id: string) => {
+const deleteReceipt = async (userId: string, id: string) => {
     try {
         const deleted_receipt = await prisma.receipt.delete({
-            where: {id},
+            where: {id, userId},
         })
         return deleted_receipt;
     } catch(error) {

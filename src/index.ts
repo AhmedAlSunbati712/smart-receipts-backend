@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRouter from "./routers/user.ts"
+import receiptRouter from "./routers/receipt.ts";
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ app.get("/", (req, res) => {
   res.json({ message: "backend is running" });
 });
 app.use("/user", userRouter);
-
+app.use("/receipt", receiptRouter);
 
 app.listen(PORT, () =>
   console.log(`Backend server is listening on port ${PORT}`)
