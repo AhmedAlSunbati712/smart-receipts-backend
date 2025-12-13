@@ -8,7 +8,8 @@ datasource db {
 
 model User {
   id        String    @id @unique @default(uuid())
-  username  String
+  firstName String
+  lastName  String
   email     String    @unique
   password  String
   createdAt DateTime  @default(now())
@@ -18,13 +19,14 @@ model User {
 model Receipt {
   id        String   @id @unique @default(uuid())
   vendor    String
+  category  Category
   total     Float
   date      DateTime
-  rawText   String // OCR extracted text
-  imageUrl  String // if you store images in S3 or Cloudinary later
+  rawText   String?
+  imageUrl  String?
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
   items ReceiptItem[]
@@ -36,6 +38,24 @@ model ReceiptItem {
   price    Float
   quantity Int
 
-  receipt   Receipt @relation(fields: [receiptId], references: [id])
+  receipt   Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
   receiptId String
+}
+
+enum Category {
+  GROCERIES
+  DINING
+  ENTERTAINMENT
+  TRANSPORTATION
+  RENT
+  UTILITIES
+  SHOPPING
+  HEALTHCARE
+  EDUCATION
+  TRAVEL
+  SUBSCRIPTIONS
+  INSURANCE
+  PERSONAL
+  GIFTS
+  OTHER
 }
