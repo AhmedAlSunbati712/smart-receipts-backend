@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import userRouter from "./routers/user.ts"
 import receiptRouter from "./routers/receipt.ts";
+import receiptItemRouter from "./routers/receipt_item.ts";
 
 dotenv.config();
 
@@ -17,8 +18,10 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({ message: "backend is running" });
 });
+
 app.use("/user", userRouter);
 app.use("/receipt", receiptRouter);
+app.use("/receipt_item", receiptItemRouter);
 
 app.listen(PORT, () =>
   console.log(`Backend server is listening on port ${PORT}`)

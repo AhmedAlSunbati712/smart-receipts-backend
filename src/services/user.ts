@@ -28,6 +28,7 @@ const getUsers = async (query: Partial<User>) => {
     try {
         let users = await prisma.user.findMany({
             where: {...query},
+            include: {receipts: true},
         });
         return users;
     } catch (error) {

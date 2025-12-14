@@ -1,8 +1,6 @@
 import express from "express";
-import userController from "../controllers/user.ts"
+import receiptItemController from "../controllers/receipt_item.ts";
 import jwt from "jsonwebtoken";
-
-const userRouter = express.Router();
 
 const verifyToken = (req, res, next) => {
     const authHeader = req.header("Authorization");
@@ -19,8 +17,10 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-userRouter.get("/", userController.getUsers);
-userRouter.post("/signup", userController.createUser);
-userRouter.put("/:id", verifyToken, userController.updateUser);
-userRouter.post("/login", userController.logIn)
-export default userRouter;
+const receiptItemRouter = express.Router();
+
+receiptItemRouter.get("/", verifyToken, receiptItemController.getReceiptItem);
+receiptItemRouter.put("/:id", verifyToken, receiptItemController.updateReceiptItem);
+receiptItemRouter.delete("/:id", verifyToken, receiptItemController.deleteReceiptItem);
+
+export default receiptItemRouter;
