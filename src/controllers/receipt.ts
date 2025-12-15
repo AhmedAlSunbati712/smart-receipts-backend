@@ -1,6 +1,4 @@
 import receiptService from "../services/receipt.ts"
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
