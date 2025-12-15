@@ -35,8 +35,14 @@ const logIn = async (req, res) => {
         if (!process.env.SECRET_KEY) {
             throw new Error("SECRET_KEY is missing in environment variables");
         }
-        const token = jwt.sign({user_id: user[0].id}, process.env.SECRET_KEY);
-        res.status(200).json({ token });
+        const token = jwt.sign({user_id: user[0].id}, process.env.SECRET_KEY!);
+        res.cookie("auth", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+          });
+        res.status(200).json({ success: true });
     } catch (error) {
         console.error("[ERROR] logIn controller: ", error);
         res.status(500).json({ message: "Login Failed" });
