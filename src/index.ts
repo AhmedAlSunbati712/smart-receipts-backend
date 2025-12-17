@@ -5,8 +5,9 @@ import userRouter from "./routers/user.ts"
 import receiptRouter from "./routers/receipt.ts";
 import receiptItemRouter from "./routers/receipt_item.ts";
 import imageRouter from "./routers/image.ts";
-import orcRouter from "./routers/orc.ts";
+import ocrRouter from "./routers/ocr.ts";
 import cookieParser from "cookie-parser";
+import ocrUIRouter from "./queues/ui/ocr_queue.ts";
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use("/user", userRouter);
 app.use("/receipt", receiptRouter);
 app.use("/receipt_item", receiptItemRouter);
 app.use("/image", imageRouter);
+app.use("/ocr", ocrRouter);
+app.use("/admin/queues", ocrUIRouter);
 
 app.listen(PORT, () =>
   console.log(`Backend server is listening on port ${PORT}`)
