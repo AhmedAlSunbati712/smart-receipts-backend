@@ -5,7 +5,7 @@ dotenv.config();
 
 const getReceipts = async (req, res) => {
     try {
-        const query = req.query;
+        const query = {...req.query, userId: req.user.user_id};
         const receipts = await receiptService.getReceipts(query);
         return res.status(201).json(receipts);
     } catch(error) {

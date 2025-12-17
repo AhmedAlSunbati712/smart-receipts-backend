@@ -42,7 +42,8 @@ const logIn = async (req, res) => {
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           });
-        res.status(200).json({ success: true });
+        const {password, ...userWithoutPassword} = user[0];
+        res.status(200).json(userWithoutPassword);
     } catch (error) {
         console.error("[ERROR] logIn controller: ", error);
         res.status(500).json({ message: "Login Failed" });

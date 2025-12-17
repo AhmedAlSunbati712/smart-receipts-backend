@@ -5,6 +5,7 @@ import userRouter from "./routers/user.ts"
 import receiptRouter from "./routers/receipt.ts";
 import receiptItemRouter from "./routers/receipt_item.ts";
 import imageRouter from "./routers/image.ts";
+import orcRouter from "./routers/orc.ts";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
