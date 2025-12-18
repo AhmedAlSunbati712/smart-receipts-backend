@@ -6,5 +6,6 @@ const redisConfig = {
     host: process.env.REDIS_URL || '127.0.0.1',
     
 };
+
 const redisConnection = new Redis("redis://localhost:6379", {maxRetriesPerRequest: null});
 export default redisConnection;

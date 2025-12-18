@@ -19,7 +19,7 @@ const verifyToken = (req, res, next) => {
 
 const imageRouter = express.Router();
 
-imageRouter.post("/presigned", imageController.getPresignedUrl);
-imageRouter.post("/signed", imageController.getSignedUrl);
+imageRouter.post("/presigned", verifyToken, imageController.getPresignedUrl);
+imageRouter.post("/signed", verifyToken, imageController.getSignedUrl);
 
 export default imageRouter;
