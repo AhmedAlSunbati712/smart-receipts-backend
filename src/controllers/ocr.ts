@@ -25,7 +25,7 @@ const getJobStatus = async (req, res) => {
 const getJobResult = async (req, res) => {
     try {
         const jobId = req.params.id;
-        const jobResult = ocrService.getJobResult(jobId);
+        const jobResult = await ocrService.getJobResult(jobId);
         res.status(200).json(jobResult);
     } catch (error) {
         console.log("[ERROR] getJobResult: ", error);
