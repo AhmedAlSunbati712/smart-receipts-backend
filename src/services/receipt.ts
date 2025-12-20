@@ -1,7 +1,20 @@
 import prisma from "../db/prisma_client.ts";
 import type { Prisma, Category, Receipt} from "@prisma/client";
 
-type CreateReceiptInput = Prisma.ReceiptCreateInput;
+type CreateReceiptItemInput = {
+    name: string;
+    price: number;
+    quantity: number;
+};
+  
+interface CreateReceiptInput {
+    vendor: string;
+    category: Category;
+    total: number;
+    date: Date;
+    items?: CreateReceiptItemInput[];
+}
+  
 type UpdateReceiptInput = {
     vendor?: string;
     category?: Category;
@@ -21,13 +34,20 @@ type UpdateReceiptInput = {
 
 const createReceipt = async (userId: string, data: Omit<CreateReceiptInput, "user"> ) => {
     try {
+        const { items, ...rest } = data;
+
         const created_receipt = await prisma.
         receipt.create({
             data: {
-                ...data,
+                ...rest,
                 user: {
                     connect: {id: userId},
-                }
+                },
+                ...(data.items ? {
+                    items: {
+                        create: data.items,
+                    }
+                } : {}),
             },
             include: {items: true}
         });

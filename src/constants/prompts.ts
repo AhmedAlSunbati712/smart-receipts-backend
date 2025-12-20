@@ -7,7 +7,7 @@ export const systemPrompt = {
     "vendor": string,
     "category": "GROCERIES" | "DINING" | "ENTERTAINMENT" | "TRANSPORTATION" | "RENT" | "UTILITIES" | "SHOPPING" | "HEALTHCARE" | "EDUCATION" | "TRAVEL" | "SUBSCRIPTIONS" | "INSURANCE" | "PERSONAL" | "GIFTS" | "OTHER",
     "total": number,
-    "date": "YYYY-MM-DD",
+    "date": "yyyy-MM-dd",
     "items": [
       {
         "name": string,
