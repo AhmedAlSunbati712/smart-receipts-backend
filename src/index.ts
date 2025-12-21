@@ -9,6 +9,7 @@ import ocrRouter from "./routers/ocr.ts";
 import cookieParser from "cookie-parser";
 import ocrUIRouter from "./queues/ui/ocr_queue.ts";
 import gptRouter from "./routers/gpt.ts";
+import analyticsRouter from "./routers/analytics.ts";
 
 dotenv.config();
 
@@ -34,7 +35,8 @@ app.use("/receipt_item", receiptItemRouter);
 app.use("/image", imageRouter);
 app.use("/ocr", ocrRouter);
 app.use("/admin/queues", ocrUIRouter);
-app.use("/gpt", gptRouter)
+app.use("/gpt", gptRouter);
+app.use("/analytics", analyticsRouter);
 
 app.listen(PORT, () =>
   console.log(`Backend server is listening on port ${PORT}`)
