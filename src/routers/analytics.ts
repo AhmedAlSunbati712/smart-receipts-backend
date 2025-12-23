@@ -22,7 +22,5 @@ const analyticsRouter = express.Router();
 // analyticsRouter.get("/spending", verifyToken, analyticsController.getSpendingOverTime);
 // analyticsRouter.get("/category", verifyToken, analyticsController.getSpendingByCategory);
 // analyticsRouter.get("/vendor", verifyToken, analyticsController.getSpendingByVendor);
-analyticsRouter.get("/spending", analyticsController.getSpendingOverTime);
-analyticsRouter.get("/category", analyticsController.getSpendingByCategory);
-analyticsRouter.get("/vendor", analyticsController.getSpendingByVendor);
+analyticsRouter.get("/", analyticsController.getAnalytics);
 export default analyticsRouter;

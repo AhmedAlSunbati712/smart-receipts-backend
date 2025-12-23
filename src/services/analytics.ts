@@ -1,100 +1,70 @@
 import prisma from "../db/prisma_client.ts";
 import type { Prisma, Category, Receipt} from "@prisma/client";
 
+type GetAnalyticsParams = {
+    userId: string;
+    startDate: Date;
+}
 
-const getSpendingOverTime = async (userId: string) => {
+const getAnalytics = async (data: GetAnalyticsParams) => {
     try {
         const receipts = await prisma.receipt.findMany({
-            where: {userId},
-            orderBy: {
-                date: "asc",
+            where: {
+                userId: data.userId,
+                date: {
+                    gte: data.startDate,
+                }
             },
-            select: {
-                date: true,
-                total: true,
+
+            orderBy: {
+                date: "asc"
             }
         });
 
-        if (receipts.length === 0) return [];
-
         let spendingOverTime: {date: string, total: number}[] = [];
+        let spendingByCategory: Partial<Record<Category, number>> = {};
+        let spendingByVendor: Record<string,number> = {};
         for (const receipt of receipts) {
+            /* ============ Processing spending by day ============ */
             const day = receipt.date.toISOString().split("T")[0];
             const last = spendingOverTime[spendingOverTime.length - 1];
             if (last && last.date == day) {
                 spendingOverTime[spendingOverTime.length - 1].total += receipt.total;
-                continue;
+            } else {
+                spendingOverTime.push({
+                    date: day,
+                    total: receipt.total,
+                });
             }
-            spendingOverTime.push({
-                date: day,
-                total: receipt.total,
-            });
-        }
-        return spendingOverTime;
-    } catch (error) {
-        console.log("[ERROR] getSpendingOverTime service error: ", error);
-        throw error;
-    }
-}
 
-const getSpendingByCategory = async (userId: string) => {
-    try {
-        const receipts = await prisma.receipt.findMany({
-            where: {userId},
-            select: {
-                category: true,
-                total: true,
-            }
-        });
-
-        let spendingByCategory: Partial<Record<Category, number>> = {};
-
-        for (const receipt of receipts) {
-            const category = receipt.category;
-            spendingByCategory[category] =
-                (spendingByCategory[category] ?? 0) + receipt.total;
-        }
-
-        return Object.entries(spendingByCategory).map(([category, total]) => ({
-            category,
-            total,
-        }));
-
-    } catch(error) {
-        console.log("[ERROR] getSpendingByCategory service error: ", error);
-        throw error;
-    }
-}
-
-const getSpendingByVendor = async (userId: string) => {
-    try {
-        const receipts = await prisma.receipt.findMany({
-            where: {userId},
-            select: {
-                vendor: true,
-                total: true,
-            }
-        })
-
-        let spendingByVendor: Partial<Record<string, number>> = {};
-        for (const receipt of receipts) {
+            /* ============= Processing vendor data =========== */
             const vendor = receipt.vendor;
             spendingByVendor[vendor] = (spendingByVendor[vendor] ?? 0) + receipt.total;
-        }
-        return Object.entries(spendingByVendor).map(([vendor, total]) => ({
-            vendor,
-            total,
-        }));
 
+            /* ============= Processing category data =========== */
+            const category = receipt.category;
+            spendingByCategory[category] = (spendingByCategory[category] ?? 0) + receipt.total;
+        }
+        return {
+            spendingOverTime,
+            categorySpending: Object.entries(spendingByCategory).map(([category, total]) => ({
+                category,
+                total
+            })),
+            vendorSpending: Object.entries(spendingByVendor).map(([vendor, total]) => ({
+                vendor,
+                total
+            }))
+        }
     } catch (error) {
-        console.log("[ERROR] getSpendingByVendor service error: ", error);
+        console.log("[ERROR] getAnalytics service error: ", error);
         throw error;
     }
 }
+
+
 const analyticsService = {
-    getSpendingOverTime,
-    getSpendingByCategory,
-    getSpendingByVendor,
+    getAnalytics,
 }
 
 export default analyticsService;
