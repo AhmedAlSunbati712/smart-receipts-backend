@@ -6,6 +6,19 @@ type GetAnalyticsParams = {
     startDate: Date;
 }
 
+type CategoryAnalytics = {
+    category: Category;
+    categorySpending: number;
+    numReceipts: number;
+    spendingOverTime: {date: string, total: number}[];
+    spendingByVendor: Record<string, number>;
+}
+
+type GetCategoryAnalyticsParams = {
+    userId: string;
+    startDate: Date;
+    endDate: Date;
+}
 const getAnalytics = async (data: GetAnalyticsParams) => {
     try {
         const receipts = await prisma.receipt.findMany({
@@ -63,8 +76,75 @@ const getAnalytics = async (data: GetAnalyticsParams) => {
 }
 
 
+const getCategoryAnalytics = async (data: GetCategoryAnalyticsParams) => {
+    try {
+        const receipts = await prisma.receipt.findMany({
+            where: {
+                userId: data.userId,
+                date: {
+                    gte: data.startDate,
+                    lte: data.endDate,
+                },
+            },
+            orderBy: {
+                date: "asc"
+            }
+        });
+
+        let periodSpending = 0;
+
+        // Initialize object
+        let categoryAnalytics: Partial<Record<Category, CategoryAnalytics>> = {};
+
+        for (const receipt of receipts) {
+            const category = receipt.category;
+
+            // Initialize if first time seeing this category
+            if (!categoryAnalytics[category]) {
+                categoryAnalytics[category] = {
+                    category,
+                    categorySpending: 0,
+                    numReceipts: 0,
+                    spendingOverTime: [],
+                    spendingByVendor: {}
+                };
+            }
+
+            // Update totals
+            periodSpending += receipt.total;
+            categoryAnalytics[category]!.numReceipts += 1;
+            categoryAnalytics[category]!.categorySpending += receipt.total;
+
+            /* ============ Processing spending by day ============ */
+            const day = receipt.date.toISOString().split("T")[0];
+            const last = categoryAnalytics[category]!.spendingOverTime[categoryAnalytics[category]!.spendingOverTime.length - 1]
+            if (last && last.date == day) {
+                categoryAnalytics[category]!.spendingOverTime[categoryAnalytics[category]!.spendingOverTime.length - 1].total += receipt.total;
+            } else {
+                categoryAnalytics[category]!.spendingOverTime.push({ date: day, total: receipt.total });
+            }
+
+            // Update vendor spending
+            if (!categoryAnalytics[category]!.spendingByVendor[receipt.vendor]) {
+                categoryAnalytics[category]!.spendingByVendor[receipt.vendor] = 0;
+            }
+            categoryAnalytics[category]!.spendingByVendor[receipt.vendor] += receipt.total;
+        }
+
+        // Convert to array
+        const categories = Object.values(categoryAnalytics);
+
+        return { periodSpending, categories };
+    } catch (error) {
+        console.log("[ERROR] getCategoryAnalytics service error: ", error);
+        throw error;
+    }
+};
+
+
 const analyticsService = {
     getAnalytics,
+    getCategoryAnalytics,
 }
 
 export default analyticsService;

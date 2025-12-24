@@ -23,4 +23,5 @@ const analyticsRouter = express.Router();
 // analyticsRouter.get("/category", verifyToken, analyticsController.getSpendingByCategory);
 // analyticsRouter.get("/vendor", verifyToken, analyticsController.getSpendingByVendor);
 analyticsRouter.get("/", analyticsController.getAnalytics);
+analyticsRouter.get("/category", analyticsController.getCategoryAnalytics);
 export default analyticsRouter;
