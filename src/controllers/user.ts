@@ -41,7 +41,7 @@ const logIn = async (req, res) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
-          });
+        });
         const {password, ...userWithoutPassword} = user[0];
         res.status(200).json(userWithoutPassword);
     } catch (error) {
