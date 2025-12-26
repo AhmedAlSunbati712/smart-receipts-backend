@@ -13,8 +13,21 @@ type CategoryAnalytics = {
     spendingOverTime: {date: string, total: number}[];
     spendingByVendor: Record<string, number>;
 }
+type VendorAnalytics = {
+    vendor: string;
+    vendorSpending: number;
+    numReceipts: number;
+    spendingOverTime: {date: string, total: number}[];
+    spendingByCategory: Partial<Record<Category, number>>;
+}
 
 type GetCategoryAnalyticsParams = {
+    userId: string;
+    startDate: Date;
+    endDate: Date;
+}
+
+type GetVendorAnalyticsParams = {
     userId: string;
     startDate: Date;
     endDate: Date;
@@ -74,7 +87,6 @@ const getAnalytics = async (data: GetAnalyticsParams) => {
         throw error;
     }
 }
-
 
 const getCategoryAnalytics = async (data: GetCategoryAnalyticsParams) => {
     try {
@@ -141,10 +153,63 @@ const getCategoryAnalytics = async (data: GetCategoryAnalyticsParams) => {
     }
 };
 
+const getVendorAnalytics = async (data: GetVendorAnalyticsParams) => {
+    try {
+        const receipts = await prisma.receipt.findMany({
+            where: {
+                userId: data.userId,
+                date: {
+                    gte: data.startDate,
+                    lte: data.endDate,
+                }
+            }
+        });
+        let periodSpending = 0;
+        let vendorAnalytics: Partial<Record<string, VendorAnalytics>> = {};
+        for (const receipt of receipts) {
+            const vendor = receipt.vendor.toLowerCase();
+            if (!vendorAnalytics[vendor]) {
+                vendorAnalytics[vendor] = {
+                    vendor,
+                    vendorSpending: 0,
+                    numReceipts: 0,
+                    spendingOverTime: [],
+                    spendingByCategory: {},
+                };
+            }
+            vendorAnalytics[vendor]!.vendorSpending += receipt.total;
+            vendorAnalytics[vendor]!.numReceipts += 1;
+
+            // =========== Processing spending by day ==========
+            const day = receipt.date.toISOString().split("T")[0];
+            const last = vendorAnalytics[vendor]!.spendingOverTime[vendorAnalytics[vendor]!.spendingOverTime.length - 1];
+            if (last && last.date == day) {
+                vendorAnalytics[vendor]!.spendingOverTime[vendorAnalytics[vendor]!.spendingOverTime.length - 1].total += receipt.total
+            } else {
+                vendorAnalytics[vendor]!.spendingOverTime.push({date: day, total: receipt.total});
+            }
+
+            // ============ Processing spending by Category ========
+            if (!vendorAnalytics[vendor]!.spendingByCategory[receipt.category]) {
+                vendorAnalytics[vendor]!.spendingByCategory[receipt.category] = 0;
+            }
+            vendorAnalytics[vendor]!.spendingByCategory[receipt.category]! += receipt.total;
+
+            periodSpending += receipt.total;
+        }
+
+        const vendors = Object.values(vendorAnalytics);
+        return {periodSpending, vendors}
+    } catch(error) {
+        console.log("[ERROR] getVendorAnalyitcs service error: ", error);
+        throw error;
+    }
+}
 
 const analyticsService = {
     getAnalytics,
     getCategoryAnalytics,
+    getVendorAnalytics
 }
 
 export default analyticsService;
