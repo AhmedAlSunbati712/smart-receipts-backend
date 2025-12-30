@@ -46,11 +46,12 @@ const getAnalytics = async (data: GetAnalyticsParams) => {
                 date: "asc"
             }
         });
-
+        let numReceipts = 0;
         let spendingOverTime: {date: string, total: number}[] = [];
         let spendingByCategory: Partial<Record<Category, number>> = {};
         let spendingByVendor: Record<string,number> = {};
         for (const receipt of receipts) {
+            numReceipts += 1
             /* ============ Processing spending by day ============ */
             const day = receipt.date.toISOString().split("T")[0];
             const last = spendingOverTime[spendingOverTime.length - 1];
@@ -73,6 +74,7 @@ const getAnalytics = async (data: GetAnalyticsParams) => {
         }
         return {
             spendingOverTime,
+            numReceipts,
             categorySpending: Object.entries(spendingByCategory).map(([category, total]) => ({
                 category,
                 total
@@ -164,10 +166,12 @@ const getVendorAnalytics = async (data: GetVendorAnalyticsParams) => {
                 }
             }
         });
+        let vendorsRecord: Record<string, string> = {};
         let periodSpending = 0;
         let vendorAnalytics: Partial<Record<string, VendorAnalytics>> = {};
         for (const receipt of receipts) {
             const vendor = receipt.vendor.toLowerCase();
+            vendorsRecord[vendor] = vendor;
             if (!vendorAnalytics[vendor]) {
                 vendorAnalytics[vendor] = {
                     vendor,
@@ -199,7 +203,7 @@ const getVendorAnalytics = async (data: GetVendorAnalyticsParams) => {
         }
 
         const vendors = Object.values(vendorAnalytics);
-        return {periodSpending, vendors}
+        return {periodSpending, vendorsRecord, vendors}
     } catch(error) {
         console.log("[ERROR] getVendorAnalyitcs service error: ", error);
         throw error;
